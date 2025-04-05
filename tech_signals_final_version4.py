@@ -56,7 +56,7 @@ st.title("📈 智能選股平台 PRO (香港版)")
 
 # 股票分類定義
 stock_categories = {
-    "MAG7": ["AAPL", "MSFT", "GOOG", "AMZN", "META", "NVDA", "TSLA"],
+    "MAG7": ["AAPL", "MSFT", "GOOG", "AMZN", "META", "NVDA", "TSLA", "TSLL", "TSLQ"],
     "AI 股": ["NVDA", "AMD", "TSM", "PLTR", "SMCI", "ASML", "TEM"],
     "ETF": ["SPY", "QQQ", "TQQQ", "SQQQ", "ARKK"],
     "黃金 / 債券 / 金融": ["GLD", "TLT", "XLF", "JPM", "BAC"],
