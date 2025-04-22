@@ -20,6 +20,7 @@ import logging
 import atexit
 import shutil
 from pmdarima import auto_arima
+import json
 
 # 設置日誌
 logging.basicConfig(filename='error_log.txt', level=logging.ERROR)
@@ -213,7 +214,7 @@ def fetch_price_data(symbol, retries=3):
                 "High": "high",
                 "Low": "low"
             })
-            df["date"] = df["date"].dt.tz_localize(None)
+            df["date"] = pd.to_datetime(df["date"]).dt.tz_localize(None)
             df = df[["date", "close", "volume", "high", "low"]]
             
             logging.info(f"yfinance: Data fetched for {symbol} at {fetch_time_yf}")
@@ -623,7 +624,15 @@ if custom:
     selected_symbol = custom.upper()
 
 if selected_symbol:
-    sector = yf.Ticker(selected_symbol).info.get("sector", "")
+    # 獲取股票行業，添加錯誤處理
+    sector = "未知"
+    try:
+        ticker = yf.Ticker(selected_symbol)
+        sector = ticker.info.get("sector", "未知")
+    except (json.decoder.JSONDecodeError, ValueError, Exception) as e:
+        logging.error(f"無法獲取 {selected_symbol} 的行業信息: {e}")
+        st.warning(f"無法從 Yahoo Finance 獲取 {selected_symbol} 的行業信息，將使用默認值 '未知': {e}")
+
     result = analyze_single_stock(selected_symbol, sector)
     
     if len(result) == 11:
@@ -648,7 +657,7 @@ if selected_symbol:
         with col2:
             st.metric("市場方向", "多頭" if latest["close"] > df["ma50"].iloc[-1] else "空頭", f"{latest.close/df['ma50'].iloc[-1]-1:.2%}")
         with col3:
-            st.metric("行業特性", sector or "未知", "高波動" if sector in ["Technology", "Consumer Cyclical"] else "一般")
+            st.metric("行業特性", sector, "高波動" if sector in ["Technology", "Consumer Cyclical"] else "一般")
         
         with st.expander("📋 詳細訊號分析", expanded=True):
             st.markdown("### 當前市場狀態")
