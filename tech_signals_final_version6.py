@@ -117,7 +117,7 @@ stock_categories = {
 }
 
 # 數據獲取函數
-def fetch_price_data(symbol, retries=3):
+def fetch_price_data(symbol, retries=5):
     end_date = dt.date.today()
     start_date = end_date - dt.timedelta(days=365)
     
@@ -533,7 +533,14 @@ if custom:
         st.sidebar.error("請輸入有效的股票代碼")
 
 if selected_symbol:
-    sector = yf.Ticker(selected_symbol).info.get("sector", "")
+    try:
+        ticker = yf.Ticker(selected_symbol)
+        sector = ticker.info.get("sector", "未知")
+    except Exception as e:
+        logging.error(f"獲取 {selected_symbol} sector 失敗: {e}")
+        sector = "未知"
+        st.warning(f"無法獲取 {selected_symbol} 的行業資訊，使用預設值 '未知'")
+
     result = analyze_single_stock(selected_symbol, sector)
     
     if len(result) == 11:
@@ -562,7 +569,7 @@ if selected_symbol:
         with col2:
             st.metric("市場方向", "多頭" if latest["close"] > df["ma50"].iloc[-1] else "空頭", f"{latest.close/df['ma50'].iloc[-1]-1:.2%}")
         with col3:
-            st.metric("行業特性", sector or "未知", "高波動" if sector in ["Technology", "Consumer Cyclical"] else "一般")
+            st.metric("行業特性", sector, "高波動" if sector in ["Technology", "Consumer Cyclical"] else "一般")
         
         with st.expander("📋 詳細訊號分析", expanded=True):
             st.markdown("### 當前市場狀態")
